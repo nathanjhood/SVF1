@@ -31,8 +31,8 @@ SVF1AudioProcessor::SVF1AudioProcessor()
     type = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("type"));
     jassert(type != nullptr);
 
-    mix = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("mix"));
-    jassert(mix != nullptr);
+    //mix = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("mix"));
+    //jassert(mix != nullptr);
 
     bypass = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("bypass"));
     jassert(bypass != nullptr);
@@ -118,8 +118,8 @@ void SVF1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     filter.prepare(spec);
     filter.reset();
 
-    mixer.prepare(spec);
-    mixer.reset();
+    //mixer.prepare(spec);
+    //mixer.reset();
 }
 
 void SVF1AudioProcessor::releaseResources()
@@ -169,8 +169,8 @@ void SVF1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    mixer.pushDrySamples(buffer);
-    mixer.setWetMixProportion (mix->get());
+    //mixer.pushDrySamples(buffer);
+    //mixer.setWetMixProportion (mix->get());
 
     filter.setCutoffFrequency (cutoff->get());
     filter.setResonance (resonance->get());
@@ -246,8 +246,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout SVF1AudioProcessor::createPa
 
     layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{"Lowpass", "Bandpass", "Highpass"}, 1));
 
-    auto mixRange = NormalisableRange<float>(0.00f, 1.00f, 00.01f, 0.5f);
-    layout.add(std::make_unique<AudioParameterFloat>("mix", "Mix", mixRange, 1.00f));
+    //auto mixRange = NormalisableRange<float>(0.00f, 1.00f, 00.01f, 0.5f);
+    //layout.add(std::make_unique<AudioParameterFloat>("mix", "Mix", mixRange, 1.00f));
 
     layout.add(std::make_unique<AudioParameterBool>("bypass", "Bypass", false));
 

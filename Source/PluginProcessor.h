@@ -64,12 +64,12 @@ public:
 private:
     //==============================================================================
     juce::dsp::StateVariableTPTFilter<float> filter;
-    juce::dsp::DryWetMixer<float> mixer;
+    //juce::dsp::DryWetMixer<float> mixer;
 
     juce::AudioParameterFloat* cutoff { nullptr };
     juce::AudioParameterFloat* resonance { nullptr };
     juce::AudioParameterChoice* type { nullptr };
-    juce::AudioParameterFloat* mix { nullptr };
+    //juce::AudioParameterFloat* mix { nullptr };
     juce::AudioParameterBool* bypass { nullptr };
 
     //==============================================================================
