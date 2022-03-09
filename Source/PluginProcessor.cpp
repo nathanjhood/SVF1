@@ -216,19 +216,27 @@ void SVF1AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
-    juce::MemoryOutputStream mos(destData, true);
-    apvts.state.writeToStream(mos);
+    //juce::MemoryOutputStream mos(destData, true);
+    //apvts.state.writeToStream(mos);
+    auto state = apvts.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void SVF1AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
-    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
-    if (tree.isValid())
-    {
-        apvts.replaceState(tree);
-    }
+    //auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    //if (tree.isValid())
+    //{
+        //apvts.replaceState(tree);
+    //}
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState.get() != nullptr)
+        if (xmlState->hasTagName(apvts.state.getType()))
+            apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
 //==============================================================================
@@ -240,7 +248,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SVF1AudioProcessor::createPa
     auto cutoffRange = NormalisableRange<float>(20.00f, 20000.00f, 00.01f, 0.198893f);
     layout.add(std::make_unique<AudioParameterFloat>("cutoff", "Cutoff", cutoffRange, 632.45f));
 
-    auto resonanceRange = NormalisableRange<float>(0.7071067811865476f, 10.000f, 00.001f, 0.5f);
+    auto resonanceRange = NormalisableRange<float>(0.7071067811865476f, 20.000f, 00.001f, 0.5f);
     layout.add(std::make_unique<AudioParameterFloat>("resonance", "Resonance", resonanceRange, 1.00f));
 
     layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{"Lowpass", "Bandpass", "Highpass"}, 1));
