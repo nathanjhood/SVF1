@@ -245,8 +245,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout SVF1AudioProcessor::createPa
 
     layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{"Lowpass", "Bandpass", "Highpass"}, 1));
 
-    //auto mixRange = NormalisableRange<float>(0.00f, 1.00f, 00.01f, 0.5f);
-    //layout.add(std::make_unique<AudioParameterFloat>("mix", "Mix", mixRange, 1.00f));
+    auto mixRange = NormalisableRange<float>(0.00f, 1.00f, 00.01f, 0.5f);
+    layout.add(std::make_unique<AudioParameterFloat>("mix", "Mix", mixRange, 1.00f));
 
     layout.add(std::make_unique<AudioParameterBool>("bypass", "Bypass", false));
 
