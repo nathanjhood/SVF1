@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="huSXLi" name="SVF1" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
-              companyName="StoneyDSP" version="1.0.3">
+              companyName="StoneyDSP" version="1.0.4">
   <MAINGROUP id="hNbzLF" name="SVF1">
     <GROUP id="{2D93C3E2-C0B4-86F9-A9C9-6AD12ACC3D60}" name="Source">
       <FILE id="CxNgQ5" name="PluginProcessor.cpp" compile="1" resource="0"
