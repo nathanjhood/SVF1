@@ -31,8 +31,8 @@ namespace dsp
 enum class StateVariableTPTFilterType
 {
     lowpass,
-    bandpass,
     highpass,
+    bandpass,
     notch,
     peak,
     lp,

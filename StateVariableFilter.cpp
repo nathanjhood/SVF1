@@ -114,10 +114,10 @@ SampleType StateVariableTPTFilter<SampleType>::processSample (int channel, Sampl
     switch (filterType)
     {
         case Type::lowpass:   return yLP;
-        case Type::bandpass:  return yBP;
         case Type::highpass:  return yHP;
-        case Type::notch:     return(yLP + yHP);
-        case Type::peak:      return(yLP - yHP);
+        case Type::bandpass:  return yBP;
+        case Type::notch:     return (yLP + yHP);
+        case Type::peak:      return (yLP - yHP);
         case Type::lp:        return (yLP + yBP);
         case Type::hp:        return (yHP + yBP);
         default:              return yLP;
