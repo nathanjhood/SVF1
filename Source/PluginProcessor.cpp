@@ -181,10 +181,10 @@ void SVF1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
         filter.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
         break;
     case 1:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
+        filter.setType(juce::dsp::StateVariableTPTFilterType::highpass);
         break;
     case 2:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::highpass);
+        filter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
         break;
     case 3:
         filter.setType(juce::dsp::StateVariableTPTFilterType::notch);
@@ -253,10 +253,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout SVF1AudioProcessor::createPa
     auto cutoffRange = NormalisableRange<float>(20.00f, 20000.00f, 00.01f, 0.198893f);
     layout.add(std::make_unique<AudioParameterFloat>("cutoff", "Cutoff", cutoffRange, 632.45f));
 
-    auto resonanceRange = NormalisableRange<float>(0.707107f, 20.000f, 00.001f, 0.376006f);
+    auto resonanceRange = NormalisableRange<float>(0.707107f, 100.000f, 00.001f, 0.271119f);
     layout.add(std::make_unique<AudioParameterFloat>("resonance", "Resonance", resonanceRange, 1.00f));
 
-    layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{ "Lowpass 12dB", "Bandpass 12dB", "Highpass 12dB", "Notch", "Peak", "Lowpass 6dB", "Highpass 6dB" }, 1));
+    layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{ "Lowpass 12dB", "Highpass 12dB", "Bandpass 12dB", "Notch", "Peak", "Lowpass 6dB", "Highpass 6dB" }, 1));
 
     //auto mixRange = NormalisableRange<float>(0.00f, 1.00f, 00.01f, 0.5f);
     //layout.add(std::make_unique<AudioParameterFloat>("mix", "Mix", mixRange, 1.00f));
