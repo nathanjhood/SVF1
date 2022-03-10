@@ -63,7 +63,7 @@ public:
 
 private:
     //==============================================================================
-    juce::dsp::StateVariableTPTFilter<float> filter;
+    juce::dsp::StateVariableTPTFilter<double> filter;
     //juce::dsp::DryWetMixer<float> mixer;
 
     juce::AudioParameterFloat* cutoff { nullptr };
