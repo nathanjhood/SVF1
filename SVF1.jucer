@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="huSXLi" name="SVF1" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
-              companyName="StoneyDSP" version="1.0.2">
+              companyName="StoneyDSP" version="1.0.3">
   <MAINGROUP id="hNbzLF" name="SVF1">
     <GROUP id="{2D93C3E2-C0B4-86F9-A9C9-6AD12ACC3D60}" name="Source">
       <FILE id="CxNgQ5" name="PluginProcessor.cpp" compile="1" resource="0"
@@ -20,7 +20,8 @@
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="SVF1" enablePluginBinaryCopyStep="1"
                        vst3BinaryLocation="C:\Program Files\Common Files\VST3\StoneyDSP"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="SVF1"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="SVF1" enablePluginBinaryCopyStep="1"
+                       vst3BinaryLocation="C:\Program Files\Common Files\VST3\StoneyDSP"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../Users/Nathan/DSP/JUCE/modules"/>
