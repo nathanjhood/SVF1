@@ -29,5 +29,17 @@ private:
     // access the processor object that created it.
     SVF1AudioProcessor& audioProcessor;
 
+    juce::Slider freqSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> freqSliderAttachmentPtr;
+
+    juce::Slider resSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> resSliderAttachmentPtr;
+
+    juce::ComboBox typeBox;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> typeBoxAttachmentPtr;
+
+    juce::Slider mixSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mixSliderAttachmentPtr;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SVF1AudioProcessorEditor)
 };
