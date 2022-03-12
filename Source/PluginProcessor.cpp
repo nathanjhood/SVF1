@@ -31,8 +31,8 @@ SVF1AudioProcessor::SVF1AudioProcessor()
     type = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("type"));
     jassert(type != nullptr);
 
-    //mix = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("mix"));
-    //jassert(mix != nullptr);
+    mix = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("mix"));
+    jassert(mix != nullptr);
 
     bypass = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("bypass"));
     jassert(bypass != nullptr);
@@ -109,7 +109,7 @@ void SVF1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    juce::dsp::ProcessSpec spec;
+    juce::dsp::ProcessSpec spec{};
 
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
@@ -118,8 +118,8 @@ void SVF1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     filter.prepare(spec);
     filter.reset();
 
-    //mixer.prepare(spec);
-    //mixer.reset();
+    mixer.prepare(spec);
+    mixer.reset();
 }
 
 void SVF1AudioProcessor::releaseResources()
@@ -172,8 +172,8 @@ void SVF1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    //mixer.pushDrySamples(buffer);
-    //mixer.setWetMixProportion (mix->get());
+    
+    mixer.setWetMixProportion (mix->get());
 
     filter.setCutoffFrequency (cutoff->get());
     filter.setResonance (resonance->get());
@@ -201,16 +201,30 @@ void SVF1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     case 6:
         filter.setType(juce::dsp::StateVariableTPTFilterType::hp);
         break;
+    case 7:
+        filter.setType(juce::dsp::StateVariableTPTFilterType::bpN);
+        break;
+    case 8:
+        filter.setType(juce::dsp::StateVariableTPTFilterType::lowpassN);
+        break;
+    case 9:
+        filter.setType(juce::dsp::StateVariableTPTFilterType::highpassN);
+        break;
     default:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
+        filter.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
     }
 
-    auto block = juce::dsp::AudioBlock <float> (buffer);
-    auto context = juce::dsp::ProcessContextReplacing <float> (block);
+    if (!bypass->get())
+    {
+        auto block = juce::dsp::AudioBlock <float>(buffer);
+        auto context = juce::dsp::ProcessContextReplacing <float>(block);
+        
+        mixer.pushDrySamples(buffer);
 
-    context.isBypassed = bypass->get();
+        filter.process(context);
 
-    filter.process(context);
+        mixer.mixWetSamples(buffer);
+    }
 }
 
 //==============================================================================
@@ -221,8 +235,8 @@ bool SVF1AudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* SVF1AudioProcessor::createEditor()
 {
-    //return new SVF1AudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor (*this);
+    return new SVF1AudioProcessorEditor (*this);
+    //return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================
@@ -253,18 +267,20 @@ juce::AudioProcessorValueTreeState::ParameterLayout SVF1AudioProcessor::createPa
     APVTS::ParameterLayout layout;
     using namespace juce;
 
-    auto cutoffRange = NormalisableRange<float>(20.00f, 20000.00f, 00.01f, 0.198893f);
-    layout.add(std::make_unique<AudioParameterFloat>("cutoff", "Cutoff", cutoffRange, 632.45f));
+    auto cutoffRange = NormalisableRange<float>(20.000f, 20000.000f, 00.001f, 0.198894f);
+    layout.add(std::make_unique<AudioParameterFloat>("cutoff", "Cutoff", cutoffRange, 632.455f));
 
-    auto resonanceRange = NormalisableRange<float>(0.707107f, 100.000f, 00.001f, 0.271119f);
+    auto resonanceRange = NormalisableRange<float>(0.707107f, 100.000f, 00.01f, 0.271119f);
     layout.add(std::make_unique<AudioParameterFloat>("resonance", "Resonance", resonanceRange, 1.00f));
 
-    layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{ "Lowpass 12dB", "Highpass 12dB", "Bandpass 12dB", "Notch", "Peak", "Lowpass 6dB", "Highpass 6dB" }, 1));
+    layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{ "Lowpass 12dB", "Highpass 12dB", "Bandpass 12dB", "Notch", "Peak", "Lowpass 6dB", "Highpass 6dB", "Bandpass 12dB (n)", "Lowpass 12dB (n)", "Highpass 12dB (n)"}, 1));
 
-    //auto mixRange = NormalisableRange<float>(0.00f, 1.00f, 00.01f, 0.5f);
-    //layout.add(std::make_unique<AudioParameterFloat>("mix", "Mix", mixRange, 1.00f));
+    auto mixRange = NormalisableRange<float>(0.00f, 1.00f, 00.01f, 0.5f);
+    layout.add(std::make_unique<AudioParameterFloat>("mix", "Mix", mixRange, 1.00f));
 
     layout.add(std::make_unique<AudioParameterBool>("bypass", "Bypass", false));
+
+    
 
     return layout;
 }

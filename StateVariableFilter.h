@@ -36,7 +36,10 @@ enum class StateVariableTPTFilterType
     notch,
     peak,
     lp,
-    hp
+    hp,
+    bpN,
+    lowpassN,
+    highpassN
 };
 
 //==============================================================================

@@ -64,13 +64,14 @@ public:
 private:
     //==============================================================================
     juce::dsp::StateVariableTPTFilter<double> filter;
-    //juce::dsp::DryWetMixer<float> mixer;
+    juce::dsp::DryWetMixer<float> mixer;
 
     juce::AudioParameterFloat* cutoff { nullptr };
     juce::AudioParameterFloat* resonance { nullptr };
     juce::AudioParameterChoice* type { nullptr };
-    //juce::AudioParameterFloat* mix { nullptr };
+    juce::AudioParameterFloat* mix { nullptr };
     juce::AudioParameterBool* bypass { nullptr };
+    //juce::UndoManager undoManager;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SVF1AudioProcessor)
