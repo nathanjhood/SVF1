@@ -27,15 +27,16 @@ SVF1AudioProcessorEditor::SVF1AudioProcessorEditor (SVF1AudioProcessor& p)
 
     addAndMakeVisible(typeBox);
     typeBox.addItem("Lowpass 12dB", 1);
-    typeBox.addItem("Highpass 12dB", 2);
-    typeBox.addItem("Bandpass 12dB", 3);
-    typeBox.addItem("Notch", 4);
-    typeBox.addItem("Peak", 5);
-    typeBox.addItem("Lowpass 6dB", 6);
-    typeBox.addItem("Highpass 6dB", 7);
+    typeBox.addItem("Lowpass 6dB", 2);
+    typeBox.addItem("Lowpass 12dB (n)", 3);
+    typeBox.addItem("Highpass 12dB", 4);
+    typeBox.addItem("Highpass 6dB", 5);
+    typeBox.addItem("Highpass 12dB (n)", 6);
+    typeBox.addItem("Bandpass 12dB", 7);
     typeBox.addItem("Bandpass 12dB (n)", 8);
-    typeBox.addItem("Lowpass 12dB (n)", 9);
-    typeBox.addItem("Highpass 12dB (n)", 10);
+    typeBox.addItem("Allpass 12dB", 9);
+    typeBox.addItem("Peak 12dB", 10);
+    typeBox.addItem("Notch 12dB", 11);
     typeBoxAttachmentPtr.reset(new juce::AudioProcessorValueTreeState::ComboBoxAttachment(audioProcessor.apvts, "type", typeBox));
 
     addAndMakeVisible(mixSlider);
