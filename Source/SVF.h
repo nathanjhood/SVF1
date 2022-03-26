@@ -1,34 +1,16 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
-
-   JUCE is an open source library subject to commercial or open-source
-   licensing.
-
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
-
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
-
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
-
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+    SVF.h
+    Created: 25 Mar 2022 11:49:36pm
+    Author:  StoneyDSP
 
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
-{
+#include <JuceHeader.h>
 
-enum class StateVariableTPTFilterType
+/*enum class StateVariableTPTFilterType
 {
     lowpass,
     highpass,
@@ -39,7 +21,23 @@ enum class StateVariableTPTFilterType
     hp,
     bpN,
     lowpassN,
-    highpassN
+    highpassN,
+    allpass
+};*/
+
+enum class StateVariableTPTFilterType
+{
+    LP2,
+    LP1,
+    LP2n,
+    HP2,
+    HP1,
+    HP2n,
+    BP2,
+    BP2n,
+    AP2,
+    N2,
+    P2
 };
 
 //==============================================================================
@@ -75,13 +73,13 @@ public:
 
     //==============================================================================
     /** Sets the filter type. */
-    void setType (Type newType);
+    void setType(Type newType);
 
     /** Sets the cutoff frequency of the filter.
 
         @param newFrequencyHz the new cutoff frequency in Hz.
     */
-    void setCutoffFrequency (SampleType newFrequencyHz);
+    void setCutoffFrequency(SampleType newFrequencyHz);
 
     /** Sets the resonance of the filter.
 
@@ -89,27 +87,27 @@ public:
         parameter. To have a standard 12 dB / octave filter, the value must be set
         at 1 / sqrt(2).
     */
-    void setResonance (SampleType newResonance);
+    void setResonance(SampleType newResonance);
 
     //==============================================================================
     /** Returns the type of the filter. */
-    Type getType() const noexcept                      { return filterType; }
+    Type getType() const noexcept { return filterType; }
 
     /** Returns the cutoff frequency of the filter. */
-    SampleType getCutoffFrequency() const noexcept     { return cutoffFrequency; }
+    SampleType getCutoffFrequency() const noexcept { return cutoffFrequency; }
 
     /** Returns the resonance of the filter. */
-    SampleType getResonance() const noexcept           { return resonance; }
+    SampleType getResonance() const noexcept { return resonance; }
 
     //==============================================================================
     /** Initialises the filter. */
-    void prepare (const ProcessSpec& spec);
+    void prepare(const juce::dsp::ProcessSpec& spec);
 
     /** Resets the internal state variables of the filter. */
     void reset();
 
     /** Resets the internal state variables of the filter to a given value. */
-    void reset (SampleType newValue);
+    void reset(SampleType newValue);
 
     /** Ensure that the state variables are rounded to zero if the state
         variables are denormals. This is only needed if you are doing
@@ -120,40 +118,40 @@ public:
     //==============================================================================
     /** Processes the input and output samples supplied in the processing context. */
     template <typename ProcessContext>
-    void process (const ProcessContext& context) noexcept
+    void process(const ProcessContext& context) noexcept
     {
         const auto& inputBlock = context.getInputBlock();
-        auto& outputBlock      = context.getOutputBlock();
+        auto& outputBlock = context.getOutputBlock();
         const auto numChannels = outputBlock.getNumChannels();
-        const auto numSamples  = outputBlock.getNumSamples();
+        const auto numSamples = outputBlock.getNumSamples();
 
-        jassert (inputBlock.getNumChannels() <= s1.size());
-        jassert (inputBlock.getNumChannels() == numChannels);
-        jassert (inputBlock.getNumSamples()  == numSamples);
+        jassert(inputBlock.getNumChannels() <= s1.size());
+        jassert(inputBlock.getNumChannels() == numChannels);
+        jassert(inputBlock.getNumSamples() == numSamples);
 
         if (context.isBypassed)
         {
-            outputBlock.copyFrom (inputBlock);
+            outputBlock.copyFrom(inputBlock);
             return;
         }
 
         for (size_t channel = 0; channel < numChannels; ++channel)
         {
-            auto* inputSamples  = inputBlock .getChannelPointer (channel);
-            auto* outputSamples = outputBlock.getChannelPointer (channel);
+            auto* inputSamples = inputBlock.getChannelPointer(channel);
+            auto* outputSamples = outputBlock.getChannelPointer(channel);
 
             for (size_t i = 0; i < numSamples; ++i)
-                outputSamples[i] = processSample ((int) channel, inputSamples[i]);
+                outputSamples[i] = processSample((int)channel, inputSamples[i]);
         }
 
-       #if JUCE_DSP_ENABLE_SNAP_TO_ZERO
+#if JUCE_DSP_ENABLE_SNAP_TO_ZERO
         snapToZero();
-       #endif
+#endif
     }
 
     //==============================================================================
     /** Processes one sample at a time on a given channel. */
-    SampleType processSample (int channel, SampleType inputValue);
+    SampleType processSample(int channel, SampleType inputValue);
 
 private:
     //==============================================================================
@@ -161,13 +159,9 @@ private:
 
     //==============================================================================
     SampleType g, h, R2;
-    std::vector<SampleType> s1 { 2 }, s2 { 2 };
+    std::vector<SampleType> s1{ 2 }, s2{ 2 };
 
     double sampleRate = 44100.0;
-    Type filterType = Type::lowpass;
-    SampleType cutoffFrequency = static_cast<SampleType> (1000.0),
-               resonance       = static_cast<SampleType> (1.0 / std::sqrt (2.0));
+    Type filterType = Type::LP2;
+    SampleType cutoffFrequency = static_cast<SampleType> (1000.0), resonance = static_cast<SampleType> (1.0 / std::sqrt(2.0));
 };
-
-} // namespace dsp
-} // namespace juce

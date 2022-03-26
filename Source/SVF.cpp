@@ -1,32 +1,14 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
-
-   JUCE is an open source library subject to commercial or open-source
-   licensing.
-
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
-
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
-
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
-
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+    SVF.cpp
+    Created: 25 Mar 2022 11:49:36pm
+    Author:  StoneyDSP
 
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
-{
+#include "SVF.h"
 
 //==============================================================================
 template <typename SampleType>
@@ -36,24 +18,24 @@ StateVariableTPTFilter<SampleType>::StateVariableTPTFilter()
 }
 
 template <typename SampleType>
-void StateVariableTPTFilter<SampleType>::setType (Type newValue)
+void StateVariableTPTFilter<SampleType>::setType(Type newType)
 {
-    filterType = newValue;
+    filterType = newType;
 }
 
 template <typename SampleType>
-void StateVariableTPTFilter<SampleType>::setCutoffFrequency (SampleType newCutoffFrequencyHz)
+void StateVariableTPTFilter<SampleType>::setCutoffFrequency(SampleType newCutoffFrequencyHz)
 {
-    jassert (isPositiveAndBelow (newCutoffFrequencyHz, static_cast<SampleType> (sampleRate * 0.5)));
+    jassert(juce::isPositiveAndBelow(newCutoffFrequencyHz, static_cast<SampleType> (sampleRate * 0.5)));
 
     cutoffFrequency = newCutoffFrequencyHz;
     update();
 }
 
 template <typename SampleType>
-void StateVariableTPTFilter<SampleType>::setResonance (SampleType newResonance)
+void StateVariableTPTFilter<SampleType>::setResonance(SampleType newResonance)
 {
-    jassert (newResonance > static_cast<SampleType> (0));
+    jassert(newResonance > static_cast<SampleType> (0));
 
     resonance = newResonance;
     update();
@@ -61,15 +43,15 @@ void StateVariableTPTFilter<SampleType>::setResonance (SampleType newResonance)
 
 //==============================================================================
 template <typename SampleType>
-void StateVariableTPTFilter<SampleType>::prepare (const ProcessSpec& spec)
+void StateVariableTPTFilter<SampleType>::prepare(const juce::dsp::ProcessSpec& spec)
 {
-    jassert (spec.sampleRate > 0);
-    jassert (spec.numChannels > 0);
+    jassert(spec.sampleRate > 0);
+    jassert(spec.numChannels > 0);
 
     sampleRate = spec.sampleRate;
 
-    s1.resize (spec.numChannels);
-    s2.resize (spec.numChannels);
+    s1.resize(spec.numChannels);
+    s2.resize(spec.numChannels);
 
     reset();
     update();
@@ -78,14 +60,14 @@ void StateVariableTPTFilter<SampleType>::prepare (const ProcessSpec& spec)
 template <typename SampleType>
 void StateVariableTPTFilter<SampleType>::reset()
 {
-    reset (static_cast<SampleType> (0));
+    reset(static_cast<SampleType> (0));
 }
 
 template <typename SampleType>
-void StateVariableTPTFilter<SampleType>::reset (SampleType newValue)
+void StateVariableTPTFilter<SampleType>::reset(SampleType newValue)
 {
     for (auto v : { &s1, &s2 })
-        std::fill (v->begin(), v->end(), newValue);
+        std::fill(v->begin(), v->end(), newValue);
 }
 
 template <typename SampleType>
@@ -93,25 +75,41 @@ void StateVariableTPTFilter<SampleType>::snapToZero() noexcept
 {
     for (auto v : { &s1, &s2 })
         for (auto& element : *v)
-            util::snapToZero (element);
+            juce::dsp::util::snapToZero(element);
 }
 
 //==============================================================================
 template <typename SampleType>
-SampleType StateVariableTPTFilter<SampleType>::processSample (int channel, SampleType inputValue)
+SampleType StateVariableTPTFilter<SampleType>::processSample(int channel, SampleType inputValue)
 {
-    auto& ls1 = s1[(size_t) channel];
-    auto& ls2 = s2[(size_t) channel];
+    auto& ls1 = s1[(size_t)channel];
+    auto& ls2 = s2[(size_t)channel];
 
     auto yHP = h * (inputValue - ls1 * (g + R2) - ls2);
 
     auto yBP = yHP * g + ls1;
-    ls1      = yHP * g + yBP;
+    ls1 = yHP * g + yBP;
 
     auto yLP = yBP * g + ls2;
-    ls2      = yBP * g + yLP;
+    ls2 = yBP * g + yLP;
 
     switch (filterType)
+    {
+    case Type::LP2:         return (yLP);
+    case Type::LP1:         return (yLP + yBP);
+    case Type::LP2n:        return (yLP * R2);
+    case Type::HP2:         return (yHP);
+    case Type::HP1:         return (yHP + yBP);
+    case Type::HP2n:        return (yHP * R2);
+    case Type::BP2:         return (yBP);
+    case Type::BP2n:        return (yBP * R2);
+    case Type::AP2:         return (inputValue - ((yBP * R2) + (yBP * R2)));
+    case Type::P2:          return (yLP - yHP);
+    case Type::N2:          return (yLP + yHP);
+    default:                return (yLP);
+    }
+
+    /*switch (filterType)
     {
     case Type::lowpass:   return yLP;
     case Type::highpass:  return yHP;
@@ -123,22 +121,20 @@ SampleType StateVariableTPTFilter<SampleType>::processSample (int channel, Sampl
     case Type::bpN:       return (yBP * R2);
     case Type::lowpassN:  return (yLP * R2);
     case Type::highpassN: return (yHP * R2);
+    case Type::allpass:   return (inputValue - ((yBP * R2) + (yBP * R2)));
     default:              return yLP;
-    }
+    }*/
 }
 
 //==============================================================================
 template <typename SampleType>
 void StateVariableTPTFilter<SampleType>::update()
 {
-    g  = static_cast<SampleType> (std::tan (juce::MathConstants<double>::pi * cutoffFrequency / sampleRate));
+    g = static_cast<SampleType> (std::tan(juce::MathConstants<double>::pi * cutoffFrequency / sampleRate));
     R2 = static_cast<SampleType> (1.0 / resonance);
-    h  = static_cast<SampleType> (1.0 / (1.0 + R2 * g + g * g));
+    h = static_cast<SampleType> (1.0 / (1.0 + R2 * g + g * g));
 }
 
 //==============================================================================
 template class StateVariableTPTFilter<float>;
 template class StateVariableTPTFilter<double>;
-
-} // namespace dsp
-} // namespace juce
