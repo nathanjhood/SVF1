@@ -11,16 +11,9 @@
 
 //==============================================================================
 SVF1AudioProcessor::SVF1AudioProcessor()
-#ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
-#endif
+                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
 {
     cutoff = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("cutoff"));
     jassert(cutoff != nullptr);
@@ -93,15 +86,19 @@ int SVF1AudioProcessor::getCurrentProgram()
 
 void SVF1AudioProcessor::setCurrentProgram (int index)
 {
+    juce::ignoreUnused(index);
 }
 
 const juce::String SVF1AudioProcessor::getProgramName (int index)
 {
+    juce::ignoreUnused(index);
     return {};
 }
 
 void SVF1AudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
+    juce::ignoreUnused(index);
+    juce::ignoreUnused(newName);
 }
 
 //==============================================================================
@@ -109,16 +106,25 @@ void SVF1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    juce::dsp::ProcessSpec spec{};
 
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
 
-    filter.prepare(spec);
-    filter.reset();
+    update();
+    prepare();
+    reset();
+}
 
+void SVF1AudioProcessor::prepare()
+{
+    filter.prepare(spec);
     mixer.prepare(spec);
+}
+
+void SVF1AudioProcessor::reset()
+{
+    filter.reset();
     mixer.reset();
 }
 
@@ -129,36 +135,23 @@ void SVF1AudioProcessor::releaseResources()
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool SVF1AudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool SVF1AudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
-    return true;
-  #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
-    if (layouts.getMainInputChannelSet()  == juce::AudioChannelSet::disabled()
-     || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled())
+    if (layouts.getMainInputChannelSet() == juce::AudioChannelSet::disabled()
+        || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::disabled())
+        return false;
 
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-    // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
-        return false;
-   #endif
-
-    return layouts.getMainInputChannelSet() == layouts.getMainOutputChannelSet();
-  #endif
+    return true;
 }
 #endif
 
 void SVF1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    juce::ignoreUnused(midiMessages);
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -173,46 +166,7 @@ void SVF1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
         buffer.clear(i, 0, buffer.getNumSamples());
 
     
-    mixer.setWetMixProportion (mix->get());
-
-    filter.setCutoffFrequency (cutoff->get());
-    filter.setResonance (resonance->get());
-
-    switch (type->getIndex())
-    {
-    case 0:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
-        break;
-    case 1:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::highpass);
-        break;
-    case 2:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
-        break;
-    case 3:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::notch);
-        break;
-    case 4:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::peak);
-        break;
-    case 5:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::lp);
-        break;
-    case 6:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::hp);
-        break;
-    case 7:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::bpN);
-        break;
-    case 8:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::lowpassN);
-        break;
-    case 9:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::highpassN);
-        break;
-    default:
-        filter.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
-    }
+    update();
 
     if (!bypass->get())
     {
@@ -261,6 +215,53 @@ void SVF1AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
             apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
+void SVF1AudioProcessor::update()
+{
+    mixer.setWetMixProportion(mix->get());
+
+    filter.setCutoffFrequency(cutoff->get());
+    filter.setResonance(resonance->get());
+
+    switch (type->getIndex())
+    {
+    case 0:
+        filter.setType(StateVariableTPTFilterType::LP2);
+        break;
+    case 1:
+        filter.setType(StateVariableTPTFilterType::LP1);
+        break;
+    case 2:
+        filter.setType(StateVariableTPTFilterType::LP2n);
+        break;
+    case 3:
+        filter.setType(StateVariableTPTFilterType::HP2);
+        break;
+    case 4:
+        filter.setType(StateVariableTPTFilterType::HP1);
+        break;
+    case 5:
+        filter.setType(StateVariableTPTFilterType::HP2n);
+        break;
+    case 6:
+        filter.setType(StateVariableTPTFilterType::BP2);
+        break;
+    case 7:
+        filter.setType(StateVariableTPTFilterType::BP2n);
+        break;
+    case 8:
+        filter.setType(StateVariableTPTFilterType::AP2);
+        break;
+    case 9:
+        filter.setType(StateVariableTPTFilterType::P2);
+        break;
+    case 10:
+        filter.setType(StateVariableTPTFilterType::N2);
+        break;
+    default:
+        filter.setType(StateVariableTPTFilterType::LP2);
+    }
+}
+
 //==============================================================================
 juce::AudioProcessorValueTreeState::ParameterLayout SVF1AudioProcessor::createParameterLayout()
 {
@@ -273,14 +274,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout SVF1AudioProcessor::createPa
     auto resonanceRange = NormalisableRange<float>(0.707107f, 100.000f, 00.01f, 0.271119f);
     layout.add(std::make_unique<AudioParameterFloat>("resonance", "Resonance", resonanceRange, 1.00f));
 
-    layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{ "Lowpass 12dB", "Highpass 12dB", "Bandpass 12dB", "Notch", "Peak", "Lowpass 6dB", "Highpass 6dB", "Bandpass 12dB (n)", "Lowpass 12dB (n)", "Highpass 12dB (n)"}, 1));
+    layout.add(std::make_unique<AudioParameterChoice>("type", "Type", juce::StringArray{ "LP2", "LP1", "LP2n", "HP2", "HP1", "HP2n", "BP2", "BP2n", "AP2", "P2", "N2"}, 0));
 
     auto mixRange = NormalisableRange<float>(0.00f, 1.00f, 00.01f, 0.5f);
     layout.add(std::make_unique<AudioParameterFloat>("mix", "Mix", mixRange, 1.00f));
 
     layout.add(std::make_unique<AudioParameterBool>("bypass", "Bypass", false));
-
-    
 
     return layout;
 }

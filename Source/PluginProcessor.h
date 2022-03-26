@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+//#include <JuceHeader.h>
+#include "SVF.h"
 
 //==============================================================================
 /**
@@ -61,10 +62,23 @@ public:
     static APVTS::ParameterLayout createParameterLayout();
     APVTS apvts{ *this, nullptr, "Parameters", createParameterLayout() };
 
+    //==============================================================================
+    /** Initialises the processor. */
+    void prepare();
+
+    /** Resets the internal state variables of the processor. */
+    void reset();
+
 private:
     //==============================================================================
-    juce::dsp::StateVariableTPTFilter<double> filter;
+    /** Updates the internal state variables of the processor. */
+    void update();
+
+    //==============================================================================
+    juce::dsp::ProcessSpec spec;
+    //juce::dsp::StateVariableTPTFilter<float> filter;
     juce::dsp::DryWetMixer<float> mixer;
+    StateVariableTPTFilter<float> filter;
 
     juce::AudioParameterFloat* cutoff { nullptr };
     juce::AudioParameterFloat* resonance { nullptr };
